@@ -31,13 +31,15 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Set up Java 17
+      - name: Set up Java 17 (Windows only)
+        if: runner.os == 'Windows'
         uses: actions/setup-java@v3
         with:
-          distribution: 'temurin' # Eclipse Adoptium (formerly AdoptOpenJDK)
+          distribution: 'temurin'
           java-version: '17'
 
-      - name: Verify Java version
+      - name: Verify Java version (Windows only)
+        if: runner.os == 'Windows'
         run: java -version
 
       - name: Testing on OS (${{ matrix.os }}) with Node.js (version ${{ matrix.node-version }}) attempt ${{ matrix.attempt }}
