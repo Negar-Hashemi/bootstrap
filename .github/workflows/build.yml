@@ -31,8 +31,15 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Show runner details
+        run: |
+          echo "Runner Info:"
+          uname -a  # For Linux
+          systeminfo  # For Windows
+          java -version
 
-      - name: Verify Java version
+
+      - name: Verify Java version 
         run: java -version
 
       - name: Testing on OS (${{ matrix.os }}) with Node.js (version ${{ matrix.node-version }}) attempt ${{ matrix.attempt }}
