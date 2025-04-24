@@ -32,15 +32,17 @@ jobs:
         run: npm install
 
       - name: Show runner details
+        if: runner.os != 'Windows'
         run: |
           echo "Runner Info:"
           uname -a  # For Linux
-          systeminfo  # For Windows
           java -version
 
-
-      - name: Verify Java version 
-        run: java -version
+      - name: Verify Java version (Windows only)
+        if: runner.os == 'Windows'
+        run: |
+          systeminfo  # For Windows
+          java -version
 
       - name: Testing on OS (${{ matrix.os }}) with Node.js (version ${{ matrix.node-version }}) attempt ${{ matrix.attempt }}
         run: |
