@@ -31,23 +31,24 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install Playwright Browsers (only if needed)
-        if: contains(runner.os, 'Linux') || contains(runner.os, 'macOS')
+      - name: Testing on OS (${{ matrix.os }}) with Node.js (version ${{ matrix.node-version }}) attempt ${{ matrix.attempt }}
+        env:
+          BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
+          BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
         run: |
-          if grep -q '@playwright/test' package.json; then
-            npx playwright install --with-deps
-          fi
-
-      - name: Run tests
-        run: |
-          echo "Running attempt #${{ matrix.attempt }} on ${{ matrix.os }} with Node.js ${{ matrix['node-version'] }} and browser ${{ matrix.browser }}"
-
-          if grep -q '@playwright/test' package.json; then
-            npx playwright test --project=${{ matrix.browser }}
-          elif grep -q 'cypress' package.json; then
-            npx cypress run --browser ${{ matrix.browser }}
-          elif grep -q 'karma' package.json; then
-            npx karma start --browsers ${{ matrix.browser }}
-          else
-            echo "⚠️ No known test runner detected in package.json" && exit 1
-
+          echo "Running tests on Node.js ${{ matrix.node-version }}, OS ${{ matrix.os }}, Browser ${{ matrix.browser }}"
+          case "${{ matrix.browser }}" in
+            chrome)
+              npm run js-test-karma -- --browsers=ChromeHeadless
+              ;;
+            firefox)
+              npm run js-test-karma -- --browsers=FirefoxHeadless
+              ;;
+            safari)
+              if [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+                npm run js-test-karma -- --browsers=Safari
+              else
+                echo "Safari only runs on macOS or via BrowserStack"
+              fi
+              ;;
+          esac
