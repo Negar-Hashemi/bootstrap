@@ -21,29 +21,33 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Set up Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: ${{ matrix['node-version'] }}
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
-      - name: Set up Java 17 (Windows only)
-        if: runner.os == 'Windows'
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - name: Verify Java version (Windows only)
-        if: runner.os == 'Windows'
-        run: java -version
-
-      - name: Run browser-based tests
+      - name: Install Playwright Browsers (only if needed)
+        if: contains(runner.os, 'Linux') || contains(runner.os, 'macOS')
         run: |
-          echo "Run attempt: ${{ matrix.attempt }}"
-          echo "Browser: ${{ matrix.browser }}"
-          npm run test -- --browser=${{ matrix.browser }}
+          if grep -q '@playwright/test' package.json; then
+            npx playwright install --with-deps
+          fi
+
+      - name: Run tests
+        run: |
+          echo "Running attempt #${{ matrix.attempt }} on ${{ matrix.os }} with Node.js ${{ matrix['node-version'] }} and browser ${{ matrix.browser }}"
+
+          if grep -q '@playwright/test' package.json; then
+            npx playwright test --project=${{ matrix.browser }}
+          elif grep -q 'cypress' package.json; then
+            npx cypress run --browser ${{ matrix.browser }}
+          elif grep -q 'karma' package.json; then
+            npx karma start --browsers ${{ matrix.browser }}
+          else
+            echo "⚠️ No known test runner detected in package.json" && exit 1
+
