@@ -40,11 +40,12 @@ jobs:
         env:
           BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
           BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
+
         run: |
           echo "Running tests on Node.js ${{ matrix.node-version }}, OS ${{ matrix.os }}, Browser ${{ matrix.browser }} (Attempt ${{ matrix.attempt }})"
 
           if [[ "${{ matrix.browser }}" == "Safari" && "${{ matrix.os }}" != "macos-latest" ]]; then
             echo "Skipping Safari on non-macOS"
           else
-            npm run test-ci-karma -- --browsers=${{ matrix.browser }}
-          fi
+            npm run js-test-karma -- --browsers=${{ matrix.browser }}
+          fi  
