@@ -16,7 +16,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         node-version: [18, 20, 22]
-        browser: [chrome-latest, firefox-latest, safari-latest]
+        browser: [ChromeHeadless, FirefoxHeadless, Safari]
         attempt: [1, 2, 3, 4, 5, 6, 7, 8, 9]
 
     steps:
@@ -43,20 +43,8 @@ jobs:
         run: |
           echo "Running tests on Node.js ${{ matrix.node-version }}, OS ${{ matrix.os }}, Browser ${{ matrix.browser }} (Attempt ${{ matrix.attempt }})"
 
-          browser="${{ matrix.browser }}"
-          os="${{ matrix.os }}"
-
-          if [[ "$browser" == "chrome-latest" ]]; then
-            npm run js-test-karma -- --browsers=ChromeHeadless
-          elif [[ "$browser" == "firefox-latest" ]]; then
-            npm run js-test-karma -- --browsers=FirefoxHeadless
-          elif [[ "$browser" == "safari-latest" ]]; then
-            if [[ "$os" == "macos-latest" ]]; then
-              npm run js-test-karma -- --browsers=Safari
-            else
-              echo "Skipping Safari on non-macOS"
-            fi
+          if [[ "${{ matrix.browser }}" == "Safari" && "${{ matrix.os }}" != "macos-latest" ]]; then
+            echo "Skipping Safari on non-macOS"
           else
-            echo "Unknown browser: $browser"
-            exit 1
+            npm run test-ci-karma -- --browsers=${{ matrix.browser }}
           fi
