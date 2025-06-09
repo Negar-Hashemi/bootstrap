@@ -1,4 +1,4 @@
-name: Test on Multiple OS and Browsers
+name: Test on Multiple OS
 
 on:
   push:
@@ -9,43 +9,40 @@ on:
       - main
 
 jobs:
-  browser-tests:
+  build:
     runs-on: ${{ matrix.os }}
+
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        node-version: [18, 20, 22]
-        browser: [ChromeHeadless, FirefoxHeadless, Safari]
-        attempt: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        os: [ubuntu-latest, macos-latest, windows-latest] # Operating systems to test
+        node-version: [18, 20, 22]                      # Node.js versions to test
+        attempt: [1, 2, 3, 4, 5, 6, 7, 8, 9,10]         # Repeat tests 10 times
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
-      - name: Install Firefox (macOS)
-        if: runner.os == 'macOS'
-        run: brew install firefox
+      - name: Set up Java 17 (Windows only)
+        if: runner.os == 'Windows'
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
 
-      - name: Run tests (Attempt ${{ matrix.attempt }}) on OS ${{ matrix.os }}, Node.js ${{ matrix.node-version }}, Browser ${{ matrix.browser }}
-        shell: bash
-        env:
-          BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
-          BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
+      - name: Verify Java version (Windows only)
+        if: runner.os == 'Windows'
+        run: java -version
 
+      - name: Testing on OS (${{ matrix.os }}) with Node.js (version ${{ matrix.node-version }}) attempt ${{ matrix.attempt }}
         run: |
-          echo "Running tests on Node.js ${{ matrix.node-version }}, OS ${{ matrix.os }}, Browser ${{ matrix.browser }} (Attempt ${{ matrix.attempt }})"
-
-          if [[ "${{ matrix.browser }}" == "Safari" && "${{ matrix.os }}" != "macos-latest" ]]; then
-            echo "Skipping Safari on non-macOS"
-          else
-            npm run js-test-karma -- --browsers=${{ matrix.browser }}
-          fi  
+          echo "Run attempt: ${{ matrix.attempt }}"
+          npm test
